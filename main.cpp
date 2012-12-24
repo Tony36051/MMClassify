@@ -2,8 +2,7 @@
 #include <fstream>
 #include <windows.h>
 using namespace std;
-int kk = 0;
-void trim(string& s)
+void trim(wstring& s)
 {//去除前后的空格，自己实现了一个
     int from = s.find_first_not_of(' ');
     int rear = s.find_last_not_of(' ');
@@ -11,21 +10,21 @@ void trim(string& s)
     s = s.substr(from, rear - from + 1);
 }
 
-void makeLower(string& s)
+void makeLower(wstring& s)
 {//转为小写，渣渣地实现了一个，不想用什么高级的方法调用
-    char* tmp = new char[s.length()+1];
-    strcpy(tmp,s.c_str());
+    wchar_t* tmp = new wchar_t[s.length()+1];
+    wcscpy(tmp,s.c_str());
     for(unsigned short i = 0; i < s.length(); i++)
         if(tmp[i]>='A'&&tmp[i]<='Z')
             tmp[i] += 'a'-'A';
     s = tmp;
 }
-string fileReName(string strFileName, string desDir)
+wstring fileReName(wstring strFileName, wstring desDir)
 {//para1 path including fileName, but para2 not
-	string desPath = desDir+'\\'+strFileName;
-	string strResult = strFileName;
-	WIN32_FIND_DATA FindFileData;
-    HANDLE hFind = FindFirstFile(desPath.c_str(),&FindFileData);
+	wstring desPath = desDir + L'\\' +strFileName;
+	wstring strResult = strFileName;
+	WIN32_FIND_DATAW FindFileData;
+    HANDLE hFind = FindFirstFileW(desPath.c_str(),&FindFileData);
 	if(hFind!=INVALID_HANDLE_VALUE)
 	{//找到
         int nIndex = strFileName.rfind('.');
@@ -34,18 +33,18 @@ string fileReName(string strFileName, string desDir)
 	}
     return strResult;
 }
-void moveNoCover(string srcPath, string desDir)
+void moveNoCover(wstring srcPath, wstring desDir)
 {//以免覆盖同名但是不同内容的图片，简单化，本来应该做成"abc.jpg"-->"abc(3).jpg"
 	size_t nIndex = srcPath.rfind('\\');
-	string strFileName = srcPath.substr(nIndex+1, srcPath.length()-nIndex-1);
+	wstring strFileName = srcPath.substr(nIndex+1, srcPath.length()-nIndex-1);
 	strFileName = fileReName(strFileName, desDir);
-	string desPath = desDir + '\\' + strFileName;
+	wstring desPath = desDir + L'\\' + strFileName;
 	//改变移动后的文件名，这样就不重复了
-	MoveFile(srcPath.c_str(), desPath.c_str());
+	MoveFileW(srcPath.c_str(), desPath.c_str());
 }
 int main()
 {
-    fstream cfgFile;
+    wfstream cfgFile;
     //同目录下生成配置文件
 	cfgFile.open("MMClassify.ini");
 	if(!cfgFile.is_open())
@@ -62,89 +61,89 @@ int main()
 		cout<<"Complete \"MMClissify.ini\" in current directry"<<endl;
 		return 1;
 	}
-	string line;//读取配置文件的临时变量
-	string srcDir;//待处理图片的源目录
-	string gifDir;//gif目标目录
-	string picDir;//普通图片的目标目录
-	string dirDir;//整个文件夹图片的目标目录
+	wstring line;//读取配置文件的临时变量
+	wstring srcDir;//待处理图片的源目录
+	wstring gifDir;//gif目标目录
+	wstring picDir;//普通图片的目标目录
+	wstring dirDir;//整个文件夹图片的目标目录
 	while(getline(cfgFile,line))//其实跟EOF方法差不多，不知道这个写法有没跟EOF一样的毛病
 	{//读取配置文件
 		size_t pos = line.find('=');
-		if(pos == string::npos)//not found，即是注释，或其他无意义语句
+		if(pos == wstring::npos)//not found，即是注释，或其他无意义语句
             continue;
-		string key = line.substr(0,pos);
-		string value = line.substr(pos+1, line.length()-pos-1);
+		wstring key = line.substr(0,pos);
+		wstring value = line.substr(pos+1, line.length()-pos-1);
 		trim(key);
 		trim(value);
-        if(key == "srcDir")
+        if(key == L"srcDir")
             srcDir = value;
-        else if(key == "gifDir")
+        else if(key == L"gifDir")
             gifDir = value;
-        else if(key == "picDir")
+        else if(key == L"picDir")
             picDir = value;
-        else if(key == "dirDir")
+        else if(key == L"dirDir")
             dirDir = value;
 	}
 	//初始化文件搜索，搜索路径，文件目录项结构，句柄
-	string searchPath = srcDir+"\\*.*";
-	WIN32_FIND_DATA FindFileData;
-	HANDLE hFind = FindFirstFile((char*)searchPath.c_str(), &FindFileData);
+	wstring searchPath = srcDir+L"\\*.*";
+	WIN32_FIND_DATAW FindFileData;
+	HANDLE hFind = FindFirstFileW((wchar_t*)searchPath.c_str(), &FindFileData);
 	do{
 		//如果是文件夹(包括".."和".")，不作处理。后面再做处理，防止移动非网页图片文件夹
 		if(FindFileData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)
 			continue;
 		//else all are files
 		//get fileName
-		string strFileName = FindFileData.cFileName;
+		wstring strFileName = FindFileData.cFileName;
         //get File's Suffix
 		int nIndex = strFileName.rfind('.');
-		string strSuffix = strFileName.substr(nIndex+1, strFileName.length()-nIndex-1);
+		wstring strSuffix = strFileName.substr(nIndex+1, strFileName.length()-nIndex-1);
 		makeLower(strSuffix);
 		//gif
-		if(strSuffix == "gif")
+		if(strSuffix == L"gif")
 		{
-			moveNoCover(srcDir+'\\'+strFileName, gifDir);
+			moveNoCover(srcDir+L'\\'+strFileName, gifDir);
 		}
 		//pic
-		if(strSuffix == "jpg" ||
-           strSuffix == "jpeg" ||
-           strSuffix == "png" ||
-           strSuffix == "bmp")
+		if(strSuffix == L"jpg" ||
+           strSuffix == L"jpeg" ||
+           strSuffix == L"png" ||
+           strSuffix == L"bmp")
 		{
-			moveNoCover(srcDir+'\\'+strFileName, picDir);
+			moveNoCover(srcDir+L'\\'+strFileName, picDir);
 		}
 		//dir。因为保存网页下来的图片全都是有个网页文件，配套一个文件夹存放图片的
-		if(strSuffix == "htm" || strSuffix == "html")
+		if(strSuffix == L"htm" || strSuffix == L"html")
 		{
 			//取得文件夹名字，还要创建目标目录，因为movefile函数只对文件，不会自己建立目录的。
 			//get fileTitle. eg:"Tony" is the fileTitle of "Tony.txt".
-			string strFileTitle = strFileName.substr(0, nIndex);
-			string strDesDir = dirDir+'\\'+strFileTitle+"_files";
-			CreateDirectory(strDesDir.c_str(), NULL);
+			wstring strFileTitle = strFileName.substr(0, nIndex);
+			wstring strDesDir = dirDir+L'\\'+strFileTitle+L"_files";
+			CreateDirectoryW(strDesDir.c_str(), NULL);
 			//初始化文件搜索，还是路径、目录项结构、句柄
-			WIN32_FIND_DATA tmpFFD;
-			string tmpSreachPath = srcDir+'\\'+strFileTitle+"_files\\*.*";
-			HANDLE tmpHFind = FindFirstFile(tmpSreachPath.c_str(),&tmpFFD);
-			//因为FindFirstFile的初始化性质，采用do-while结构
+			WIN32_FIND_DATAW tmpFFD;
+			wstring tmpSreachPath = srcDir+L'\\'+strFileTitle+L"_files\\*.*";
+			HANDLE tmpHFind = FindFirstFileW(tmpSreachPath.c_str(),&tmpFFD);
+			//因为FindFirstFileW的初始化性质，采用do-while结构
 			do
 			{
 				//in this app, no dir。在预设环境下，不会有嵌套目录，所以也不会有递归
 				if(tmpFFD.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)
 					continue;
-				string strSrcFilePath = srcDir+'\\'+strFileTitle+"_files\\"+tmpFFD.cFileName;
-				string strDesFilePath = strDesDir+'\\'+tmpFFD.cFileName;
+				wstring strSrcFilePath = srcDir+L'\\'+strFileTitle+L"_files\\"+tmpFFD.cFileName;
+				wstring strDesFilePath = strDesDir+L'\\'+tmpFFD.cFileName;
 				//如果移动不成功，表示已经有了重复的，直接删除原图即可。如果移动成功，就不用删除源图了。
-				if(!MoveFile(strSrcFilePath.c_str(), strDesFilePath.c_str()))
-					DeleteFile(strSrcFilePath.c_str());
-			}while(FindNextFile(tmpHFind, &tmpFFD));
+				if(!MoveFileW(strSrcFilePath.c_str(), strDesFilePath.c_str()))
+					DeleteFileW(strSrcFilePath.c_str());
+			}while(FindNextFileW(tmpHFind, &tmpFFD));
 			//最后要删除原来的目录
-			string strSrcDir = srcDir+'\\'+strFileTitle+"_files";
-			RemoveDirectory(strSrcDir.c_str());
+			wstring strSrcDir = srcDir+L'\\'+strFileTitle+L"_files";
+			RemoveDirectoryW(strSrcDir.c_str());
 			//把网页文件也移动过去
-			string strSrcHtml = srcDir+'\\'+strFileName;
-			string strDesHtml = dirDir+'\\'+strFileName;
-			if(!MoveFile(strSrcHtml.c_str(), strDesHtml.c_str()))
-				DeleteFile(strSrcHtml.c_str());
+			wstring strSrcHtml = srcDir+L'\\'+strFileName;
+			wstring strDesHtml = dirDir+L'\\'+strFileName;
+			if(!MoveFileW(strSrcHtml.c_str(), strDesHtml.c_str()))
+				DeleteFileW(strSrcHtml.c_str());
 		}
-	}while(FindNextFile(hFind, &FindFileData));
+	}while(FindNextFileW(hFind, &FindFileData));
 }
