@@ -1,4 +1,4 @@
 MMClassify
 ==========
 
-Windows File Operations use to classify my collection of beauties.
+Windows File Operations use to classify my picture files of beauties.
