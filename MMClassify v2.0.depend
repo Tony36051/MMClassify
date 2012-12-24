@@ -1,0 +1,11 @@
+# depslib dependency file v1.0
+1356351200 source:f:\my documents\code\mmclassify v2.0\main.cpp
+	<iostream>
+	<fstream>
+	<windows.h>
+
+1356355124 source:f:\my documents\code\mmclassify v2.1\main.cpp
+	<iostream>
+	<fstream>
+	<windows.h>
+
